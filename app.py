@@ -1,9 +1,7 @@
 # ===============================
 # Laptop Price Prediction App
-# Professional Streamlit Dashboard + ML Model
+# Streamlit Dashboard + ML Model
 # ===============================
-
-from pathlib import Path
 
 import streamlit as st
 import pandas as pd
@@ -26,8 +24,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 st.set_page_config(
     page_title="Laptop Price Prediction",
     page_icon="💻",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
 
@@ -37,98 +34,65 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    .stApp {
-        background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
-    }
-
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-        border-right: 1px solid rgba(255,255,255,0.08);
-    }
-
-    section[data-testid="stSidebar"] * {
-        color: #f8fafc !important;
-    }
-
-    section[data-testid="stSidebar"] .stSelectbox div,
-    section[data-testid="stSidebar"] .stMultiSelect div,
-    section[data-testid="stSidebar"] .stSlider div,
-    section[data-testid="stSidebar"] .stNumberInput div {
-        color: #0f172a !important;
+    .main {
+        background-color: #f7f9fc;
     }
 
     .main-title {
         font-size: 42px;
-        font-weight: 900;
-        color: #0f172a;
+        font-weight: 800;
+        color: #102a43;
         margin-bottom: 5px;
     }
 
     .subtitle {
         font-size: 18px;
-        color: #475569;
-        margin-bottom: 24px;
-    }
-
-    .page-card {
-        background: #ffffff;
-        padding: 20px 22px;
-        border-radius: 18px;
-        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
-        border: 1px solid #e2e8f0;
-        margin-bottom: 20px;
+        color: #52616b;
+        margin-bottom: 25px;
     }
 
     .metric-card {
-        background: linear-gradient(135deg, #ffffff, #eff6ff);
-        padding: 22px;
+        background: linear-gradient(135deg, #ffffff, #eef5ff);
+        padding: 20px;
         border-radius: 18px;
-        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-        border-left: 7px solid #2563eb;
-        min-height: 120px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border-left: 6px solid #2563eb;
+        margin-bottom: 10px;
     }
 
     .metric-title {
         font-size: 15px;
-        color: #64748b;
-        margin-bottom: 8px;
-        font-weight: 600;
+        color: #52616b;
+        margin-bottom: 5px;
     }
 
     .metric-value {
-        font-size: 30px;
-        font-weight: 900;
-        color: #0f172a;
+        font-size: 28px;
+        font-weight: 800;
+        color: #102a43;
     }
 
-    .insight-box {
-        background: linear-gradient(135deg, #ecfeff, #dbeafe);
-        border-left: 6px solid #0284c7;
-        padding: 16px 18px;
+    .section-box {
+        background-color: white;
+        padding: 18px;
         border-radius: 16px;
-        margin-bottom: 12px;
-        color: #0f172a;
-        font-weight: 600;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+        margin-bottom: 16px;
     }
 
     .best-model-box {
-        background: linear-gradient(135deg, #dcfce7, #dbeafe);
-        padding: 22px;
+        background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+        padding: 20px;
         border-radius: 18px;
-        border-left: 8px solid #16a34a;
+        border-left: 7px solid #0284c7;
         color: #0f172a;
         font-size: 18px;
-        font-weight: 700;
-        margin-bottom: 18px;
+        font-weight: 600;
     }
 
-    .small-note {
-        color: #64748b;
-        font-size: 14px;
-    }
-
-    h1, h2, h3 {
-        color: #0f172a;
+    div[data-testid="stMetricValue"] {
+        font-size: 28px;
+        color: #102a43;
     }
     </style>
     """,
@@ -140,18 +104,8 @@ st.markdown(
 # Helper Functions
 # -------------------------------
 @st.cache_data
-def load_and_clean_data(uploaded_file=None):
-    if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
-    else:
-        data_path = Path(__file__).parent / "laptopData.csv"
-        if not data_path.exists():
-            st.error(
-                "Dataset file not found. Please upload laptopData.csv to the same folder as app.py, "
-                "or upload it from the sidebar."
-            )
-            st.stop()
-        df = pd.read_csv(data_path)
+def load_and_clean_data():
+    df = pd.read_csv("laptopData.csv")
 
     # remove missing values and duplicated rows
     df = df.dropna().copy()
@@ -217,15 +171,25 @@ def load_and_clean_data(uploaded_file=None):
 
 def build_model_dataframe(df):
     model_df = df.copy()
+
     model_df = model_df.drop(columns=[
-        "Ram", "Weight", "Inches", "Cpu", "Gpu", "Memory", "OpSys", "ScreenResolution"
+        "Ram",
+        "Weight",
+        "Inches",
+        "Cpu",
+        "Gpu",
+        "Memory",
+        "OpSys",
+        "ScreenResolution"
     ])
+
     return model_df
 
 
 @st.cache_resource
 def train_models(_df):
     model_df = build_model_dataframe(_df)
+
     categorical_cols = ["Company", "TypeName", "GPU_Brand", "CPU_Brand", "OS_Name"]
 
     model_encoded = pd.get_dummies(
@@ -239,7 +203,10 @@ def train_models(_df):
     y = model_encoded["Price"]
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
+        X,
+        y,
+        test_size=0.2,
+        random_state=42
     )
 
     scaler = StandardScaler()
@@ -311,79 +278,27 @@ def create_metric_card(title, value):
 
 def prepare_prediction_row(user_input, feature_columns, categorical_cols):
     row = pd.DataFrame([user_input])
-    row_encoded = pd.get_dummies(row, columns=categorical_cols, drop_first=False, dtype=int)
+
+    # Use drop_first=False for one-row prediction.
+    # Then align columns with training features.
+    row_encoded = pd.get_dummies(
+        row,
+        columns=categorical_cols,
+        drop_first=False,
+        dtype=int
+    )
+
     row_encoded = row_encoded.reindex(columns=feature_columns, fill_value=0)
     return row_encoded
 
 
-def apply_filters(df, selected_companies, selected_types, selected_os, selected_ram, selected_price):
-    return df[
-        (df["Company"].isin(selected_companies)) &
-        (df["TypeName"].isin(selected_types)) &
-        (df["OS_Name"].isin(selected_os)) &
-        (df["Ram_GB"].isin(selected_ram)) &
-        (df["Price"].between(selected_price[0], selected_price[1]))
-    ].copy()
-
-
 # -------------------------------
-# Sidebar Navigation and Data
+# Load Data and Train Models
 # -------------------------------
-st.sidebar.markdown("# 💻 Laptop ML")
-st.sidebar.caption("Professional dashboard for laptop price prediction")
-st.sidebar.success("✅ Sidebar-only version")
-
-uploaded_file = st.sidebar.file_uploader("Optional: upload laptopData.csv", type=["csv"])
-laptop_clean = load_and_clean_data(uploaded_file)
+laptop_clean = load_and_clean_data()
 model_info = train_models(laptop_clean)
 results_df = model_info["results_df"]
 best_model_name = model_info["best_model_name"]
-
-page = st.sidebar.radio(
-    "Navigation",
-    [
-        "Overview",
-        "EDA Charts",
-        "Model Evaluation",
-        "Price Prediction",
-        "Project Workflow"
-    ],
-    label_visibility="visible"
-)
-
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🔎 Filters")
-
-with st.sidebar.expander("Open filters", expanded=True):
-    company_options = sorted(laptop_clean["Company"].unique())
-    type_options = sorted(laptop_clean["TypeName"].unique())
-    os_options = sorted(laptop_clean["OS_Name"].unique())
-    ram_options = sorted(laptop_clean["Ram_GB"].unique())
-
-    selected_companies = st.multiselect("Company", company_options, default=company_options)
-    selected_types = st.multiselect("Laptop Type", type_options, default=type_options)
-    selected_os = st.multiselect("Operating System", os_options, default=os_options)
-    selected_ram = st.multiselect("RAM (GB)", ram_options, default=ram_options)
-
-    price_min = int(laptop_clean["Price"].min())
-    price_max = int(laptop_clean["Price"].max())
-    selected_price = st.slider("Price Range", price_min, price_max, (price_min, price_max))
-
-if st.sidebar.button("Reset filters"):
-    st.rerun()
-
-filtered_data = apply_filters(
-    laptop_clean,
-    selected_companies,
-    selected_types,
-    selected_os,
-    selected_ram,
-    selected_price
-)
-
-st.sidebar.markdown("---")
-st.sidebar.success(f"Best model: {best_model_name}")
-st.sidebar.info(f"Filtered rows: {len(filtered_data):,}")
 
 
 # -------------------------------
@@ -391,21 +306,83 @@ st.sidebar.info(f"Filtered rows: {len(filtered_data):,}")
 # -------------------------------
 st.markdown('<div class="main-title">💻 Laptop Price Prediction Dashboard</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="subtitle">Interactive dashboard with sidebar navigation, filters, insights, model evaluation, and price prediction.</div>',
+    '<div class="subtitle">Interactive Streamlit app for data exploration, model evaluation, and laptop price prediction.</div>',
     unsafe_allow_html=True
 )
 
 
 # -------------------------------
-# Page 1: Overview
+# Sidebar Filters
 # -------------------------------
-if page == "Overview":
-    st.markdown('<div class="page-card">', unsafe_allow_html=True)
+st.sidebar.header("🔎 Dashboard Filters")
+
+company_options = sorted(laptop_clean["Company"].unique())
+type_options = sorted(laptop_clean["TypeName"].unique())
+os_options = sorted(laptop_clean["OS_Name"].unique())
+ram_options = sorted(laptop_clean["Ram_GB"].unique())
+
+selected_companies = st.sidebar.multiselect(
+    "Company",
+    company_options,
+    default=company_options
+)
+
+selected_types = st.sidebar.multiselect(
+    "Laptop Type",
+    type_options,
+    default=type_options
+)
+
+selected_os = st.sidebar.multiselect(
+    "Operating System",
+    os_options,
+    default=os_options
+)
+
+selected_ram = st.sidebar.multiselect(
+    "RAM (GB)",
+    ram_options,
+    default=ram_options
+)
+
+price_min = int(laptop_clean["Price"].min())
+price_max = int(laptop_clean["Price"].max())
+selected_price = st.sidebar.slider(
+    "Price Range",
+    min_value=price_min,
+    max_value=price_max,
+    value=(price_min, price_max)
+)
+
+filtered_data = laptop_clean[
+    (laptop_clean["Company"].isin(selected_companies)) &
+    (laptop_clean["TypeName"].isin(selected_types)) &
+    (laptop_clean["OS_Name"].isin(selected_os)) &
+    (laptop_clean["Ram_GB"].isin(selected_ram)) &
+    (laptop_clean["Price"].between(selected_price[0], selected_price[1]))
+].copy()
+
+
+# -------------------------------
+# Tabs
+# -------------------------------
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "📊 Overview",
+    "📈 EDA Charts",
+    "🤖 Model Evaluation",
+    "🔮 Price Prediction",
+    "📝 Project Workflow"
+])
+
+
+# -------------------------------
+# Tab 1: Overview
+# -------------------------------
+with tab1:
     st.subheader("Dataset Overview")
-    st.write("Use the sidebar filters to explore the laptop dataset interactively.")
-    st.markdown('</div>', unsafe_allow_html=True)
 
     col1, col2, col3, col4 = st.columns(4)
+
     with col1:
         create_metric_card("Total Laptops", f"{len(filtered_data):,}")
     with col2:
@@ -418,25 +395,13 @@ if page == "Overview":
         avg_ram = filtered_data["Ram_GB"].mean() if len(filtered_data) > 0 else 0
         create_metric_card("Average RAM", f"{avg_ram:.1f} GB")
 
-    st.markdown("### 💡 Key Insights")
+    st.markdown("---")
 
     if len(filtered_data) == 0:
         st.warning("No data matches the selected filters. Please change the filters from the sidebar.")
     else:
-        top_company = filtered_data["Company"].value_counts().idxmax()
-        top_os = filtered_data["OS_Name"].value_counts().idxmax()
-        top_type = filtered_data["TypeName"].value_counts().idxmax()
-        highest_type = filtered_data.groupby("TypeName")["Price"].mean().idxmax()
-
-        i1, i2 = st.columns(2)
-        with i1:
-            st.markdown(f'<div class="insight-box">🏢 Most common brand: {top_company}</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="insight-box">🪟 Most common OS: {top_os}</div>', unsafe_allow_html=True)
-        with i2:
-            st.markdown(f'<div class="insight-box">💻 Most common type: {top_type}</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="insight-box">💰 Highest average price type: {highest_type}</div>', unsafe_allow_html=True)
-
         c1, c2 = st.columns(2)
+
         with c1:
             company_count = filtered_data["Company"].value_counts().reset_index()
             company_count.columns = ["Company", "Count"]
@@ -445,10 +410,10 @@ if page == "Overview":
                 x="Company",
                 y="Count",
                 title="Number of Laptops by Company",
-                color="Count",
-                color_continuous_scale="Blues"
+                color="Company",
+                color_discrete_sequence=px.colors.qualitative.Set3
             )
-            fig_company.update_layout(showlegend=False, plot_bgcolor="white")
+            fig_company.update_layout(showlegend=False)
             st.plotly_chart(fig_company, use_container_width=True)
 
         with c2:
@@ -459,25 +424,24 @@ if page == "Overview":
                 title="Distribution of Laptop Prices",
                 color_discrete_sequence=["#2563eb"]
             )
-            fig_price.update_layout(plot_bgcolor="white")
             st.plotly_chart(fig_price, use_container_width=True)
 
-        st.markdown("### Filtered Data")
+        st.subheader("Filtered Data")
         display_cols = [
             "Company", "TypeName", "Ram_GB", "Weight_kg", "Inches_float",
             "CPU_Brand", "GPU_Brand", "OS_Name", "Has_SSD", "Price"
         ]
-        st.dataframe(filtered_data[display_cols], use_container_width=True, height=360)
+        st.dataframe(filtered_data[display_cols], use_container_width=True)
 
 
 # -------------------------------
-# Page 2: EDA Charts
+# Tab 2: EDA Charts
 # -------------------------------
-elif page == "EDA Charts":
+with tab2:
     st.subheader("Exploratory Data Analysis")
 
     if len(filtered_data) == 0:
-        st.warning("No data to visualize. Please change the filters from the sidebar.")
+        st.warning("No data to visualize. Please change the filters.")
     else:
         c1, c2 = st.columns(2)
 
@@ -492,7 +456,6 @@ elif page == "EDA Charts":
                 color="Price",
                 color_continuous_scale="Blues"
             )
-            fig_avg_company.update_layout(plot_bgcolor="white")
             st.plotly_chart(fig_avg_company, use_container_width=True)
 
         with c2:
@@ -506,7 +469,6 @@ elif page == "EDA Charts":
                 color="Price",
                 color_continuous_scale="Teal"
             )
-            fig_avg_type.update_layout(plot_bgcolor="white")
             st.plotly_chart(fig_avg_type, use_container_width=True)
 
         c3, c4 = st.columns(2)
@@ -520,7 +482,6 @@ elif page == "EDA Charts":
                 color="Ram_GB",
                 color_discrete_sequence=px.colors.qualitative.Pastel
             )
-            fig_ram.update_layout(plot_bgcolor="white")
             st.plotly_chart(fig_ram, use_container_width=True)
 
         with c4:
@@ -532,13 +493,21 @@ elif page == "EDA Charts":
                 title="Weight vs Price by Laptop Type",
                 hover_data=["Company", "Ram_GB", "OS_Name"]
             )
-            fig_scatter.update_layout(plot_bgcolor="white")
             st.plotly_chart(fig_scatter, use_container_width=True)
 
         numeric_cols = [
-            "Price", "Ram_GB", "Weight_kg", "Inches_float", "Resolution_Width",
-            "Resolution_Height", "Has_SSD", "Has_HDD", "IPS", "Touch_Screen"
+            "Price",
+            "Ram_GB",
+            "Weight_kg",
+            "Inches_float",
+            "Resolution_Width",
+            "Resolution_Height",
+            "Has_SSD",
+            "Has_HDD",
+            "IPS",
+            "Touch_Screen"
         ]
+
         corr = filtered_data[numeric_cols].corr()
         fig_corr = px.imshow(
             corr,
@@ -552,15 +521,15 @@ elif page == "EDA Charts":
 
 
 # -------------------------------
-# Page 3: Model Evaluation
+# Tab 3: Model Evaluation
 # -------------------------------
-elif page == "Model Evaluation":
+with tab3:
     st.subheader("Model Evaluation")
 
     st.markdown(
         f"""
         <div class="best-model-box">
-        🏆 Best Model: {best_model_name}<br>
+        Best Model: {best_model_name}<br>
         PCA reduced the features from {model_info['original_features']} to {model_info['pca_components']} components while keeping about {model_info['variance_kept']:.1%} of the information.
         </div>
         """,
@@ -570,37 +539,35 @@ elif page == "Model Evaluation":
     st.markdown("### Model Results")
     st.dataframe(results_df.round(3), use_container_width=True)
 
-    c1, c2 = st.columns(2)
+    fig_r2 = px.bar(
+        results_df,
+        x="Model",
+        y="R2 Score",
+        title="Model Comparison Based on R² Score",
+        color="Model",
+        color_discrete_sequence=px.colors.qualitative.Set2
+    )
+    fig_r2.update_yaxes(range=[0, 1])
+    st.plotly_chart(fig_r2, use_container_width=True)
 
-    with c1:
-        fig_r2 = px.bar(
-            results_df,
-            x="Model",
-            y="R2 Score",
-            title="Model Comparison Based on R² Score",
-            color="Model",
-            color_discrete_sequence=px.colors.qualitative.Set2
-        )
-        fig_r2.update_yaxes(range=[0, 1])
-        fig_r2.update_layout(plot_bgcolor="white")
-        st.plotly_chart(fig_r2, use_container_width=True)
-
-    with c2:
-        fig_errors = px.bar(
-            results_df,
-            x="Model",
-            y=["MAE", "RMSE"],
-            barmode="group",
-            title="Model Error Comparison: MAE and RMSE"
-        )
-        fig_errors.update_layout(plot_bgcolor="white")
-        st.plotly_chart(fig_errors, use_container_width=True)
+    fig_errors = px.bar(
+        results_df,
+        x="Model",
+        y=["MAE", "RMSE"],
+        barmode="group",
+        title="Model Error Comparison: MAE and RMSE"
+    )
+    st.plotly_chart(fig_errors, use_container_width=True)
 
     st.markdown("### Actual vs Predicted Prices")
     y_test = model_info["y_test"]
     best_pred = model_info["predictions"][best_model_name]
 
-    actual_pred_df = pd.DataFrame({"Actual Price": y_test, "Predicted Price": best_pred})
+    actual_pred_df = pd.DataFrame({
+        "Actual Price": y_test,
+        "Predicted Price": best_pred
+    })
+
     fig_actual_pred = px.scatter(
         actual_pred_df,
         x="Actual Price",
@@ -619,55 +586,43 @@ elif page == "Model Evaluation":
             y=[min_price_line, max_price_line],
             mode="lines",
             name="Perfect Prediction",
-            line=dict(dash="dash", color="#16a34a")
+            line=dict(dash="dash")
         )
     )
-    fig_actual_pred.update_layout(plot_bgcolor="white")
+
     st.plotly_chart(fig_actual_pred, use_container_width=True)
 
 
 # -------------------------------
-# Page 4: Price Prediction
+# Tab 4: Price Prediction
 # -------------------------------
-elif page == "Price Prediction":
+with tab4:
     st.subheader("Predict Laptop Price")
-    st.write("Enter laptop specifications below. The prediction uses the best model from the evaluation section.")
+    st.write("Enter laptop specifications below and click the button to predict the price.")
 
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🔮 Prediction Inputs")
-    st.sidebar.caption("These inputs appear here to keep the main page clean.")
+    c1, c2, c3 = st.columns(3)
 
-    input_company = st.sidebar.selectbox("Company", sorted(laptop_clean["Company"].unique()))
-    input_type = st.sidebar.selectbox("Laptop Type", sorted(laptop_clean["TypeName"].unique()))
-    input_ram = st.sidebar.selectbox("RAM (GB)", sorted(laptop_clean["Ram_GB"].unique()))
-    input_inches = st.sidebar.number_input("Screen Size (Inches)", 10.0, 20.0, 15.6, 0.1)
-    input_weight = st.sidebar.number_input("Weight (kg)", 0.5, 5.0, 2.0, 0.1)
-    input_cpu = st.sidebar.selectbox("CPU Brand", sorted(laptop_clean["CPU_Brand"].unique()))
-    input_gpu = st.sidebar.selectbox("GPU Brand", sorted(laptop_clean["GPU_Brand"].unique()))
-    input_os = st.sidebar.selectbox("Operating System", sorted(laptop_clean["OS_Name"].unique()))
-    input_width = st.sidebar.selectbox("Resolution Width", sorted(laptop_clean["Resolution_Width"].unique()))
-    input_height = st.sidebar.selectbox("Resolution Height", sorted(laptop_clean["Resolution_Height"].unique()))
+    with c1:
+        input_company = st.selectbox("Company", sorted(laptop_clean["Company"].unique()))
+        input_type = st.selectbox("Laptop Type", sorted(laptop_clean["TypeName"].unique()))
+        input_ram = st.selectbox("RAM (GB)", sorted(laptop_clean["Ram_GB"].unique()), index=2 if len(sorted(laptop_clean["Ram_GB"].unique())) > 2 else 0)
+        input_inches = st.number_input("Screen Size (Inches)", min_value=10.0, max_value=20.0, value=15.6, step=0.1)
 
-    input_ssd = st.sidebar.checkbox("Has SSD", value=True)
-    input_hdd = st.sidebar.checkbox("Has HDD", value=False)
-    input_flash = st.sidebar.checkbox("Has Flash Storage", value=False)
-    input_hybrid = st.sidebar.checkbox("Has Hybrid Storage", value=False)
-    input_touch = st.sidebar.checkbox("Touch Screen", value=False)
-    input_ips = st.sidebar.checkbox("IPS Display", value=True)
+    with c2:
+        input_weight = st.number_input("Weight (kg)", min_value=0.5, max_value=5.0, value=2.0, step=0.1)
+        input_cpu = st.selectbox("CPU Brand", sorted(laptop_clean["CPU_Brand"].unique()))
+        input_gpu = st.selectbox("GPU Brand", sorted(laptop_clean["GPU_Brand"].unique()))
+        input_os = st.selectbox("Operating System", sorted(laptop_clean["OS_Name"].unique()))
 
-    st.markdown(
-        f"""
-        <div class="page-card">
-        <h3>Selected Laptop Specifications</h3>
-        <p><b>Company:</b> {input_company}</p>
-        <p><b>Type:</b> {input_type}</p>
-        <p><b>RAM:</b> {input_ram} GB</p>
-        <p><b>CPU:</b> {input_cpu} | <b>GPU:</b> {input_gpu}</p>
-        <p><b>Operating System:</b> {input_os}</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    with c3:
+        input_ssd = st.checkbox("Has SSD", value=True)
+        input_hdd = st.checkbox("Has HDD", value=False)
+        input_flash = st.checkbox("Has Flash Storage", value=False)
+        input_hybrid = st.checkbox("Has Hybrid Storage", value=False)
+        input_touch = st.checkbox("Touch Screen", value=False)
+        input_ips = st.checkbox("IPS Display", value=True)
+        input_width = st.selectbox("Resolution Width", sorted(laptop_clean["Resolution_Width"].unique()), index=0)
+        input_height = st.selectbox("Resolution Height", sorted(laptop_clean["Resolution_Height"].unique()), index=0)
 
     predict_button = st.button("🔮 Predict Price", type="primary")
 
@@ -691,7 +646,12 @@ elif page == "Price Prediction":
             "OS_Name": input_os
         }
 
-        row_encoded = prepare_prediction_row(user_input, model_info["feature_columns"], model_info["categorical_cols"])
+        row_encoded = prepare_prediction_row(
+            user_input,
+            model_info["feature_columns"],
+            model_info["categorical_cols"]
+        )
+
         row_scaled = model_info["scaler"].transform(row_encoded)
         row_pca = model_info["pca"].transform(row_scaled)
         predicted_price = model_info["best_model"].predict(row_pca)[0]
@@ -701,84 +661,31 @@ elif page == "Price Prediction":
 
 
 # -------------------------------
-# Page 5: Project Workflow
+# Tab 5: Project Workflow
 # -------------------------------
-elif page == "Project Workflow":
+with tab5:
     st.subheader("Project Workflow")
 
     st.markdown(
         """
-        <div class="page-card">
-        This Streamlit app follows the same machine learning workflow used in the notebook.
-        The goal is to predict laptop prices using cleaned features, PCA, and regression models.
-        </div>
-        """,
-        unsafe_allow_html=True
+        This Streamlit app follows the same machine learning workflow used in the notebook:
+
+        1. **Data Loading**: Load the laptop dataset.
+        2. **Data Cleaning**: Remove missing values, duplicated rows, and invalid values.
+        3. **Feature Engineering**: Create useful features such as RAM size, weight, CPU brand, GPU brand, storage type, OS group, and screen features.
+        4. **EDA**: Explore the data using interactive charts and filters.
+        5. **Preprocessing**: Encode categorical columns and scale numerical features.
+        6. **PCA**: Reduce dimensionality while keeping about 95% of the information.
+        7. **Modeling**: Train three regression models.
+        8. **Evaluation**: Compare models using MAE, MSE, RMSE, and R² score.
+        9. **Prediction**: Use the best model to predict laptop prices interactively.
+        """
     )
 
-    steps = [
-        "Data Loading: Load the laptop dataset.",
-        "Data Cleaning: Remove missing values, duplicated rows, and invalid values.",
-        "Feature Engineering: Create RAM, weight, CPU, GPU, storage, OS, and screen features.",
-        "EDA: Explore the data using interactive charts and filters.",
-        "Preprocessing: Encode categorical columns and scale numerical features.",
-        "PCA: Reduce dimensionality while keeping about 95% of the information.",
-        "Modeling: Train Linear Regression, Decision Tree, and Random Forest.",
-        "Evaluation: Compare models using MAE, MSE, RMSE, and R² score.",
-        "Prediction: Use the best model to predict laptop prices interactively."
-    ]
+    st.markdown("### Models Used")
+    st.write("- Linear Regression")
+    st.write("- Decision Tree Regressor")
+    st.write("- Random Forest Regressor")
 
-    for step in steps:
-        st.markdown(f"- {step}")
-
-    st.markdown("---")
-    st.markdown("### 💡 Project Insights")
-
-    if len(laptop_clean) > 0:
-        top_companies = laptop_clean["Company"].value_counts().head(3).index.tolist()
-        top_companies_text = ", ".join(top_companies)
-        most_common_os = laptop_clean["OS_Name"].value_counts().idxmax()
-        most_common_type = laptop_clean["TypeName"].value_counts().idxmax()
-        highest_price_type = laptop_clean.groupby("TypeName")["Price"].mean().idxmax()
-        highest_ram = laptop_clean.groupby("Ram_GB")["Price"].mean().idxmax()
-
-        avg_ssd_price = laptop_clean[laptop_clean["Has_SSD"] == 1]["Price"].mean()
-        avg_no_ssd_price = laptop_clean[laptop_clean["Has_SSD"] == 0]["Price"].mean()
-
-        insight_col1, insight_col2 = st.columns(2)
-
-        with insight_col1:
-            st.markdown(
-                f'<div class="insight-box">🏢 {top_companies_text} are the most common laptop brands in the dataset.</div>',
-                unsafe_allow_html=True
-            )
-            st.markdown(
-                f'<div class="insight-box">🪟 {most_common_os} is the most common operating system in the dataset.</div>',
-                unsafe_allow_html=True
-            )
-            st.markdown(
-                f'<div class="insight-box">💻 {most_common_type} is the most common laptop type, while {highest_price_type} has the highest average price.</div>',
-                unsafe_allow_html=True
-            )
-
-        with insight_col2:
-            st.markdown(
-                f'<div class="insight-box">📈 RAM is an important feature. Laptops with higher RAM, such as {highest_ram}GB, usually have higher prices.</div>',
-                unsafe_allow_html=True
-            )
-
-            if not pd.isna(avg_ssd_price) and not pd.isna(avg_no_ssd_price):
-                st.markdown(
-                    '<div class="insight-box">⚡ Laptops with SSD storage usually have higher average prices than laptops without SSD.</div>',
-                    unsafe_allow_html=True
-                )
-
-            st.markdown(
-                f'<div class="insight-box">📉 PCA reduced the features from {model_info["original_features"]} to {model_info["pca_components"]} components while keeping about {model_info["variance_kept"]:.1%} of the information.</div>',
-                unsafe_allow_html=True
-            )
-
-    st.markdown("### 🏆 Best Model Insight")
-    st.success(
-        f"{best_model_name} achieved the best performance because it had the highest R² score and the lowest prediction errors compared to the other models."
-    )
+    st.markdown("### Best Model")
+    st.success(f"{best_model_name} achieved the best performance in this project.")
